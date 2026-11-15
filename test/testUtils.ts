@@ -53,10 +53,14 @@ export function createGreyImage(
 /**
  * Create an image from 8-bit Greya data.
  * @param imageData - Raw image data.
+ * @param options - Additional options to create the image.
  * @returns The greya Image.
  */
-export function createGreyaImage(imageData: number[][] | string): Image {
-  return createImageFromData(imageData, 'GREYA');
+export function createGreyaImage(
+  imageData: number[][] | string,
+  options?: CreateImageOptions,
+): Image {
+  return createImageFromData(imageData, 'GREYA', options);
 }
 /**
  * Create an image from 8-bit RGB data.

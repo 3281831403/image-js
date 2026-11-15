@@ -27,7 +27,7 @@ export function convertColor(
     ['GREYA', ['GREY', 'RGB', 'RGBA']],
     ['RGB', ['GREY', 'GREYA', 'RGBA']],
     ['RGBA', ['GREY', 'GREYA', 'RGB']],
-    ['BINARY', ['GREY', 'RGB', 'RGBA']],
+    ['BINARY', ['GREY', 'GREYA', 'RGB', 'RGBA']],
   ]);
 
   if (image.colorModel === colorModel && colorModel !== 'BINARY') {
@@ -71,16 +71,19 @@ export function convertColor(
       copyAlpha(image, output);
     }
     return output;
-  } else if (colorModel === 'GREY') {
-    const output = maskToOutputImage(image, options);
-    convertBinaryToGrey(image, output);
-    return output;
   } else {
-    const img = new Image(image.width, image.height, {
-      colorModel,
+    const output = maskToOutputImage(image, options, {
+      newParameters: { colorModel },
     });
-    convertBinaryToRgb(image, img);
-    return img;
+    if (colorModel === 'GREY' || colorModel === 'GREYA') {
+      convertBinaryToGrey(image, output);
+    } else {
+      convertBinaryToRgb(image, output);
+    }
+    if (output.alpha) {
+      output.fillAlpha(output.maxValue);
+    }
+    return output;
   }
 }
 

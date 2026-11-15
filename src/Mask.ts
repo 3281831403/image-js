@@ -54,6 +54,7 @@ import {
   topHat,
 } from './morphology/index.ts';
 import type {
+  ConvertColorOptions,
   CopyToOptions,
   PaintMaskOnMaskOptions,
 } from './operations/index.ts';
@@ -453,8 +454,17 @@ export class Mask {
     return this;
   }
 
-  public convertColor(colorModel: ImageColorModel): Image {
-    return convertColor(this, colorModel);
+  /**
+   * Convert the mask to an image with the given color model.
+   * @param colorModel - Color model of the resulting image.
+   * @param options - Convert color options.
+   * @returns The converted image.
+   */
+  public convertColor(
+    colorModel: ImageColorModel,
+    options?: ConvertColorOptions,
+  ): Image {
+    return convertColor(this, colorModel, options);
   }
 
   // FILTERS

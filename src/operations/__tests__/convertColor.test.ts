@@ -114,6 +114,97 @@ test('Mask to GREY', () => {
   ]);
 });
 
+test('Mask to GREYA', () => {
+  const mask = testUtils.createMask([
+    [1, 1],
+    [0, 0],
+  ]);
+
+  const img = mask.convertColor('GREYA');
+
+  expect(img.colorModel).toBe('GREYA');
+  expect(img).toMatchImageData([
+    [255, 255, 255, 255],
+    [0, 255, 0, 255],
+  ]);
+});
+
+test('Mask to GREY with out', () => {
+  const mask = testUtils.createMask(`
+    0 1
+    1 0
+  `);
+  const out = testUtils.createGreyImage([
+    [0, 0],
+    [0, 0],
+  ]);
+
+  const img = mask.convertColor('GREY', { out });
+
+  expect(img).toBe(out);
+  expect(out).toMatchImageData([
+    [0, 255],
+    [255, 0],
+  ]);
+});
+
+test('Mask to GREYA with out', () => {
+  const mask = testUtils.createMask(`
+    0 1
+    1 0
+  `);
+  const out = testUtils.createGreyaImage([
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ]);
+
+  const img = mask.convertColor('GREYA', { out });
+
+  expect(img).toBe(out);
+  expect(out).toMatchImageData([
+    [0, 255, 255, 255],
+    [255, 255, 0, 255],
+  ]);
+});
+
+test('Mask to RGB with out', () => {
+  const mask = testUtils.createMask(`
+    0 1
+    1 0
+  `);
+  const out = testUtils.createRgbImage([
+    [0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0],
+  ]);
+
+  const img = mask.convertColor('RGB', { out });
+
+  expect(img).toBe(out);
+  expect(out).toMatchImageData([
+    [0, 0, 0, 255, 255, 255],
+    [255, 255, 255, 0, 0, 0],
+  ]);
+});
+
+test('Mask to RGBA with out', () => {
+  const mask = testUtils.createMask(`
+    0 1
+    1 0
+  `);
+  const out = testUtils.createRgbaImage([
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+  ]);
+
+  const img = mask.convertColor('RGBA', { out });
+
+  expect(img).toBe(out);
+  expect(out).toMatchImageData([
+    [0, 0, 0, 255, 255, 255, 255, 255],
+    [255, 255, 255, 255, 0, 0, 0, 255],
+  ]);
+});
+
 test('Mask to RGBA', () => {
   const mask = testUtils.createMask(`
     0 0

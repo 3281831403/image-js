@@ -43,6 +43,7 @@ export function extract(
     Math.min(image.height, mask.height + row) - Math.max(0, row);
 
   let newImage = new Image(resultWidth, resultHeight, {
+    bitDepth: image.bitDepth,
     colorModel: image.colorModel,
     origin,
   });

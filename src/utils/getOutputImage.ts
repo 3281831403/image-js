@@ -71,14 +71,21 @@ export function getOutputImage(
  * user-supplied options when the input is a mask.
  * @param mask - Current mask on which the algorithm is applied.
  * @param options - Options object received by the algorithm.
+ * @param internalOptions - Additional private options.
  * @returns The output image.
  */
-export function maskToOutputImage(mask: Mask, options: OutOptions = {}): Image {
+export function maskToOutputImage(
+  mask: Mask,
+  options: OutOptions = {},
+  internalOptions: OutInternalOptions = {},
+): Image {
   const { out } = options;
+  const { newParameters } = internalOptions;
 
   if (out === undefined) {
     return Image.createFrom(mask, {
       colorModel: 'GREY',
+      ...newParameters,
     });
   } else {
     if (!(out instanceof Image)) {
@@ -89,6 +96,7 @@ export function maskToOutputImage(mask: Mask, options: OutOptions = {}): Image {
       height: mask.height,
       bitDepth: 8,
       colorModel: 'GREY',
+      ...newParameters,
     };
     checkRequirements(requirements, out);
     return out;
