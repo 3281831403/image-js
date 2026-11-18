@@ -1,6 +1,7 @@
 import { match } from 'ts-pattern';
 
 import type { Image } from '../Image.ts';
+import type { Mask } from '../Mask.ts';
 
 import { round } from './round.ts';
 import type {
@@ -17,7 +18,7 @@ export type InterpolationType =
   (typeof InterpolationType)[keyof typeof InterpolationType];
 
 type InterpolationFunction = (
-  image: Image,
+  image: Image | Mask,
   column: number,
   row: number,
   channel: number,
@@ -50,7 +51,7 @@ export function getInterpolationFunction(
  * @returns The interpolated value.
  */
 function interpolateNearest(
-  image: Image,
+  image: Image | Mask,
   column: number,
   row: number,
   channel: number,
@@ -72,7 +73,7 @@ function interpolateNearest(
  * @returns The interpolated value.
  */
 function interpolateBilinear(
-  image: Image,
+  image: Image | Mask,
   column: number,
   row: number,
   channel: number,
@@ -116,7 +117,7 @@ function interpolateBilinear(
  * @returns The interpolated value.
  */
 function interpolateBicubic(
-  image: Image,
+  image: Image | Mask,
   column: number,
   row: number,
   channel: number,

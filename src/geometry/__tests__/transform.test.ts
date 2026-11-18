@@ -2,6 +2,8 @@
 //folder.
 import { expect, test } from 'vitest';
 
+import { Image } from '../../Image.ts';
+
 test('compare result of translation with opencv with default parameters', () => {
   const img = testUtils.load('opencv/test.png');
   const translation = [
@@ -272,4 +274,81 @@ test('check borderValue with alpha', () => {
       ].flat(),
     ),
   );
+});
+
+test('should not mutate the transform matrix', () => {
+  const img = testUtils.load('opencv/test.png');
+  const matrix = [
+    [1, 0, 2],
+    [0, 1, 4],
+  ];
+  const copy = matrix.map((row) => row.slice());
+
+  img.transform(matrix, { width: 16, height: 20 });
+
+  expect(matrix).toStrictEqual(copy);
+});
+
+test('should not mutate the transform matrix with fullImage', () => {
+  const img = testUtils.load('opencv/test.png');
+  const matrix = [
+    [0, -1, img.width + 1],
+    [1, 0, 0],
+  ];
+  const copy = matrix.map((row) => row.slice());
+
+  img.transform(matrix, { fullImage: true });
+
+  expect(matrix).toStrictEqual(copy);
+});
+
+test('should not mutate a 3x3 transform matrix', () => {
+  const img = testUtils.load('opencv/test.png');
+  const matrix = [
+    [1, 0, 2],
+    [0, 1, 4],
+    [0, 0, 1],
+  ];
+  const copy = matrix.map((row) => row.slice());
+
+  img.transform(matrix, { width: 16, height: 20, fullImage: true });
+
+  expect(matrix).toStrictEqual(copy);
+});
+
+test('should write the result into the out image', () => {
+  const img = testUtils.load('opencv/test.png');
+  const translation = [
+    [1, 0, 2],
+    [0, 1, 4],
+  ];
+  const out = new Image(16, 20, {
+    colorModel: img.colorModel,
+    bitDepth: img.bitDepth,
+  });
+
+  const transformed = img.transform(translation, {
+    width: 16,
+    height: 20,
+    out,
+  });
+
+  expect(transformed).toBe(out);
+  expect(out).toMatchImage('opencv/testTranslate.png');
+});
+
+test('should throw a RangeError if out has wrong dimensions', () => {
+  const img = testUtils.load('opencv/test.png');
+  const translation = [
+    [1, 0, 2],
+    [0, 1, 4],
+  ];
+  const out = new Image(10, 10, {
+    colorModel: img.colorModel,
+    bitDepth: img.bitDepth,
+  });
+
+  expect(() => {
+    img.transform(translation, { width: 16, height: 20, out });
+  }).toThrow(RangeError);
 });

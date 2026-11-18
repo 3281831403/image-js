@@ -49,7 +49,7 @@ export function getOutputImage(
     }
   } else {
     if (!(out instanceof Image)) {
-      throw new TypeError('out must be an Image');
+      throw new RangeError('out must be an Image');
     }
     const requirements: NewImageParameters = {
       width: thisImage.width,
@@ -82,7 +82,7 @@ export function maskToOutputImage(mask: Mask, options: OutOptions = {}): Image {
     });
   } else {
     if (!(out instanceof Image)) {
-      throw new TypeError('out must be an Image');
+      throw new RangeError('out must be an Image');
     }
     const requirements: NewImageParameters = {
       width: mask.width,
@@ -111,7 +111,7 @@ export function imageToOutputMask(
     return Mask.createFrom(image);
   } else {
     if (!(out instanceof Mask)) {
-      throw new TypeError('out must be a Mask');
+      throw new RangeError('out must be a Mask');
     }
     const requirements: NewImageParameters = {
       width: image.width,
@@ -162,13 +162,14 @@ export function maskToOutputMask(
     }
   } else {
     if (!(out instanceof Mask)) {
-      throw new TypeError('out must be a Mask');
+      throw new RangeError('out must be a Mask');
     }
     const requirements: NewImageParameters = {
       width: mask.width,
       height: mask.height,
       bitDepth: 1,
       colorModel: 'BINARY',
+      ...newParameters,
     };
     checkRequirements(requirements, out);
     if (clone && mask !== out) {

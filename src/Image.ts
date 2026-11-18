@@ -68,7 +68,7 @@ import {
 import type {
   Point,
   ResizeOptions,
-  RotateAngle,
+  RotateOptions,
   TransformOptions,
   TransformRotateOptions,
 } from './geometry/index.ts';
@@ -1102,8 +1102,8 @@ export class Image {
     return resize(this, options);
   }
 
-  public rotate(angle: RotateAngle): Image {
-    return rotate(this, angle);
+  public rotate(angle: number, options?: RotateOptions): Image {
+    return rotate(this, angle, options);
   }
 
   public transform(

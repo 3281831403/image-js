@@ -1,6 +1,7 @@
 import { match } from 'ts-pattern';
 
 import type { Image } from '../Image.ts';
+import type { Mask } from '../Mask.ts';
 
 import type { BorderInterpolationFunction } from './utils.types.ts';
 
@@ -48,7 +49,7 @@ function getInterpolateConstant(value: number[]): BorderInterpolationFunction {
     column: number,
     row: number,
     channel: number,
-    image: Image,
+    image: Image | Mask,
   ): number {
     const newColumn = interpolateConstantPoint(column, image.width);
     const newRow = interpolateConstantPoint(row, image.height);
@@ -79,7 +80,7 @@ function interpolateReplicate(
   column: number,
   row: number,
   channel: number,
-  image: Image,
+  image: Image | Mask,
 ): number {
   return image.getValue(
     interpolateReplicatePoint(column, image.width),
@@ -113,7 +114,7 @@ function interpolateReflect(
   column: number,
   row: number,
   channel: number,
-  image: Image,
+  image: Image | Mask,
 ): number {
   return image.getValue(
     interpolateReflectPoint(column, image.width),
@@ -144,7 +145,7 @@ function interpolateWrap(
   column: number,
   row: number,
   channel: number,
-  image: Image,
+  image: Image | Mask,
 ): number {
   return image.getValue(
     interpolateWrapPoint(column, image.width),
@@ -175,7 +176,7 @@ function interpolateReflect101(
   column: number,
   row: number,
   channel: number,
-  image: Image,
+  image: Image | Mask,
 ): number {
   return image.getValue(
     interpolateReflect101Point(column, image.width),

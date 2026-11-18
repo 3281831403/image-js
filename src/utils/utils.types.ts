@@ -1,4 +1,5 @@
 import type { Image } from '../Image.ts';
+import type { Mask } from '../Mask.ts';
 
 export type ClampFunction = (value: number) => number;
 
@@ -28,5 +29,5 @@ export type BorderInterpolationFunction = (
   column: number,
   row: number,
   channel: number,
-  image: Image,
+  image: Image | Mask,
 ) => number;

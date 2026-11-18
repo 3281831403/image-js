@@ -6,7 +6,7 @@ import type { Mask } from '../../Mask.ts';
  * @param channels - Array of channels.
  * @param image - The image being processed.
  */
-export function validateChannels(channels: number[], image: Image): void {
+export function validateChannels(channels: number[], image: Image | Mask): void {
   for (const channel of channels) {
     validateChannel(channel, image);
   }
@@ -17,7 +17,7 @@ export function validateChannels(channels: number[], image: Image): void {
  * @param channel - Channel index to validate.
  * @param image - The image being processed.
  */
-export function validateChannel(channel: number, image: Image): void {
+export function validateChannel(channel: number, image: Image | Mask): void {
   if (!Number.isInteger(channel) || channel >= image.channels || channel < 0) {
     throw new RangeError(
       `invalid channel: ${channel}. It must be a positive integer smaller than ${image.channels}`,
@@ -30,7 +30,7 @@ export function validateChannel(channel: number, image: Image): void {
  * @param values - Array of values to validate.
  * @param image - Image from which the values come.
  */
-export function validateValues(values: number[], image: Image): void {
+export function validateValues(values: number[], image: Image | Mask): void {
   for (const value of values) {
     validateValue(value, image);
   }
@@ -41,7 +41,7 @@ export function validateValues(values: number[], image: Image): void {
  * @param value - Value to validate.
  * @param image - Image from which the value comes.
  */
-export function validateValue(value: number, image: Image): void {
+export function validateValue(value: number, image: Image | Mask): void {
   if (value > image.maxValue || value < 0) {
     throw new RangeError(
       `invalid value: ${value}. It must be a positive value smaller than ${
@@ -76,7 +76,7 @@ export function validateForComparison(
  * @param color - Color to check.
  * @param image - Image.
  */
-export function validateColor(color: number[], image: Image): void {
+export function validateColor(color: number[], image: Image | Mask): void {
   validateChannel(color.length - 1, image);
   validateValues(color, image);
 }

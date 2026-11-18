@@ -17,6 +17,8 @@ import {
 } from './draw/index.ts';
 import type { AndOptions, InvertOptions, OrOptions } from './filters/index.ts';
 import { and, invert, or } from './filters/index.ts';
+import type { RotateOptions } from './geometry/rotate.ts';
+import { rotate } from './geometry/rotate.ts';
 import { getBorderPoints } from './maskAnalysis/getBorderPoints.ts';
 import { getConvexHull } from './maskAnalysis/getConvexHull.ts';
 import type { GetExternalContourOptions } from './maskAnalysis/getExternalContour.ts';
@@ -494,6 +496,17 @@ export class Mask {
    */
   public or(other: Mask, options?: OrOptions): Mask {
     return or(this, other, options);
+  }
+
+  // GEOMETRY
+  /**
+   * Rotate the mask by any angle. Only nearest interpolation is supported.
+   * @param angle - Angle in degrees. Positive values rotate clockwise.
+   * @param options - Rotate options.
+   * @returns The rotated mask.
+   */
+  public rotate(angle: number, options?: RotateOptions): Mask {
+    return rotate(this, angle, options);
   }
 
   // MASK ANALYSIS

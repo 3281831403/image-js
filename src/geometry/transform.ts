@@ -1,15 +1,21 @@
 import { Matrix, inverse } from 'ml-matrix';
 
-import { Image } from '../Image.ts';
+import type { Image } from '../Image.ts';
+import { Mask } from '../Mask.ts';
 import { getClamp } from '../utils/clamp.ts';
 import { getDefaultColor } from '../utils/getDefaultColor.ts';
+import type { OutOptions } from '../utils/getOutputImage.ts';
+import {
+  getOutputImage,
+  maskToOutputMask,
+} from '../utils/getOutputImage.ts';
 import type { BorderType } from '../utils/interpolateBorder.ts';
 import { getBorderInterpolation } from '../utils/interpolateBorder.ts';
 import type { InterpolationType } from '../utils/interpolatePixel.ts';
 import { getInterpolationFunction } from '../utils/interpolatePixel.ts';
 import { validateColor } from '../utils/validators/validators.ts';
 
-export interface TransformOptions {
+export interface TransformOptions extends OutOptions {
   /**
    * Width of the output image.
    */
@@ -20,6 +26,7 @@ export interface TransformOptions {
   height?: number;
   /**
    * Method to use to interpolate the new pixels.
+   * Masks only support `'nearest'`.
    * @default `'bilinear'`
    */
 
@@ -55,15 +62,36 @@ export interface TransformOptions {
 export function transform(
   image: Image,
   transformMatrix: number[][],
+  options?: TransformOptions,
+): Image;
+export function transform(
+  image: Mask,
+  transformMatrix: number[][],
+  options?: TransformOptions,
+): Mask;
+export function transform(
+  image: Image | Mask,
+  transformMatrix: number[][],
+  options?: TransformOptions,
+): Image | Mask;
+export function transform(
+  image: Image | Mask,
+  transformMatrix: number[][],
   options: TransformOptions = {},
-): Image {
+): Image | Mask {
   const {
-    borderValue = getDefaultColor(image),
+    borderValue = image instanceof Mask ? 0 : getDefaultColor(image),
     borderType = 'constant',
     interpolationType = 'bilinear',
     fullImage,
   } = options;
   let { width = image.width, height = image.height } = options;
+
+  if (image instanceof Mask && interpolationType !== 'nearest') {
+    throw new RangeError(
+      `invalid interpolationType: ${interpolationType}. Masks only support nearest interpolation.`,
+    );
+  }
 
   if (Array.isArray(borderValue)) {
     validateColor(borderValue, image);
@@ -74,40 +102,27 @@ export function transform(
       `transformation matrix must be 2x3 or 3x3. Received ${transformMatrix.length}x${transformMatrix[1].length}`,
     );
   }
-  if (transformMatrix.length === 2) {
-    transformMatrix.push([0, 0, 1]);
+
+  // Copy the matrix so that the user's array is never mutated.
+  let matrix = transformMatrix.map((row) => row.slice());
+  if (matrix.length === 2) {
+    matrix.push([0, 0, 1]);
   }
 
   if (fullImage) {
-    transformMatrix = transformMatrix.map((row) => row.slice());
-    transformMatrix[0][2] = 0;
-    transformMatrix[1][2] = 0;
+    matrix[0][2] = 0;
+    matrix[1][2] = 0;
     const corners = [
-      image.getCoordinates('top-left'),
-      image.getCoordinates('top-right'),
-      image.getCoordinates('bottom-right'),
-      image.getCoordinates('bottom-left'),
+      { column: 0, row: 0 },
+      { column: image.width, row: 0 },
+      { column: image.width, row: image.height },
+      { column: 0, row: image.height },
     ];
-
-    corners[1].column += 1;
-    corners[2].column += 1;
-    corners[2].row += 1;
-    corners[3].row += 1;
 
     const transformedCorners = corners.map((corner) => {
       return [
-        transformPoint(
-          transformMatrix[0],
-          transformMatrix[2],
-          corner.column,
-          corner.row,
-        ),
-        transformPoint(
-          transformMatrix[1],
-          transformMatrix[2],
-          corner.column,
-          corner.row,
-        ),
+        transformPoint(matrix[0], matrix[2], corner.column, corner.row),
+        transformPoint(matrix[1], matrix[2], corner.column, corner.row),
       ];
     });
 
@@ -122,33 +137,25 @@ export function transform(
     width = maxX - minX;
     height = maxY - minY;
 
-    const centerX = transformPoint(
-      transformMatrix[0],
-      transformMatrix[2],
-      center[0],
-      center[1],
-    );
-    const centerY = transformPoint(
-      transformMatrix[1],
-      transformMatrix[2],
-      center[0],
-      center[1],
-    );
+    const centerX = transformPoint(matrix[0], matrix[2], center[0], center[1]);
+    const centerY = transformPoint(matrix[1], matrix[2], center[0], center[1]);
     const a = (width - 1) / 2 - centerX;
     const b = (height - 1) / 2 - centerY;
-    transformMatrix[0][2] = a;
-    transformMatrix[1][2] = b;
+    matrix[0][2] = a;
+    matrix[1][2] = b;
     width = Math.round(width);
     height = Math.round(height);
   }
 
   if (!options.inverse) {
-    transformMatrix = inverse(new Matrix(transformMatrix)).to2DArray();
+    matrix = inverse(new Matrix(matrix)).to2DArray();
   }
-  const newImage = Image.createFrom(image, {
-    width,
-    height,
-  });
+
+  const newParameters = { width, height };
+  const newImage =
+    image instanceof Mask
+      ? maskToOutputMask(image, options, { newParameters })
+      : getOutputImage(image, options, { newParameters });
 
   const interpolateBorder = getBorderInterpolation(borderType, borderValue);
   const clamp = getClamp(newImage);
@@ -156,18 +163,8 @@ export function transform(
   const interpolate = getInterpolationFunction(interpolationType);
   for (let row = 0; row < newImage.height; row++) {
     for (let column = 0; column < newImage.width; column++) {
-      const nx = transformPoint(
-        transformMatrix[0],
-        transformMatrix[2],
-        column,
-        row,
-      );
-      const ny = transformPoint(
-        transformMatrix[1],
-        transformMatrix[2],
-        column,
-        row,
-      );
+      const nx = transformPoint(matrix[0], matrix[2], column, row);
+      const ny = transformPoint(matrix[1], matrix[2], column, row);
       for (let channel = 0; channel < newImage.channels; channel++) {
         const newValue = interpolate(
           image,
@@ -177,7 +174,9 @@ export function transform(
           interpolateBorder,
           clamp,
         );
-        newImage.setValue(column, row, channel, newValue);
+        // Mask.setValue only accepts bits, but nearest interpolation of a
+        // mask can only yield 0 or 1, so the cast is safe.
+        (newImage as Image).setValue(column, row, channel, newValue);
       }
     }
   }
